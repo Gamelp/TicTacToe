@@ -19,4 +19,10 @@ struct Game
 {
 	int Board[ROWS][COLS] = {};
 	int CurrentPlayer = PLAYER_X;
+	bool GameOver;
+};
+
+struct BestMove
+{
+	int Row, Col;
 };

@@ -24,6 +24,7 @@
     <ProjectGuid>{5876cc03-0f29-4783-8556-86c9d5d56b69}</ProjectGuid>
     <RootNamespace>EmptySdlProject</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>TicTacToe</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

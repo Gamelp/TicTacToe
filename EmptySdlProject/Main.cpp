@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cstdlib>
+#include <algorithm> 
 
 #include <SDL.h>
 
@@ -8,6 +10,7 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
 Game game;
+int corner = 3;
 
 bool running = false;
 
@@ -61,7 +64,18 @@ void setup()
 	}
 
 	//Who will start the game
-	game.CurrentPlayer = PLAYER_X;
+	int rnd = rand() % 10;
+	if (rnd < 5)
+	{
+		game.CurrentPlayer = PLAYER_X;
+	}
+	else
+	{
+		game.CurrentPlayer = PLAYER_O;
+	}
+
+	//New game
+	game.GameOver = false;
 }
 
 //Cleanup before exiting
@@ -92,21 +106,23 @@ void input(void)
 					int x, y;
 					Uint32 buttons = SDL_GetMouseState(&x, &y);
 
-					int CELL_X = (int)(x / CELL_WIDTH);
-					int CELL_Y = (int)(y / CELL_HEIGHT);
-
-					if (game.Board[CELL_X][CELL_Y] == EMPTY)
+					if (!game.GameOver)
 					{
-						if (game.CurrentPlayer == PLAYER_X)
+						int CELL_X = (int)(x / CELL_WIDTH);
+						int CELL_Y = (int)(y / CELL_HEIGHT);
+
+						if (game.Board[CELL_X][CELL_Y] == EMPTY)
 						{
-							game.Board[CELL_X][CELL_Y] = PLAYER_X;
-							game.CurrentPlayer = PLAYER_O;
+							if (game.CurrentPlayer == PLAYER_X)
+							{
+								game.Board[CELL_X][CELL_Y] = PLAYER_X;
+								game.CurrentPlayer = PLAYER_O;
+							}
 						}
-						else if (game.CurrentPlayer == PLAYER_O)
-						{
-							game.Board[CELL_X][CELL_Y] = PLAYER_O;
-							game.CurrentPlayer = PLAYER_X;
-						}
+					}
+					else
+					{
+						setup();
 					}
 				}
 				break;
@@ -114,10 +130,257 @@ void input(void)
 	}
 }
 
+//Check if moves left
+bool isMovesLeft()
+{
+	for (int x = 0; x < ROWS; x++)
+		for (int y = 0; y < COLS; y++)
+			if (game.Board[x][y] == EMPTY)
+				return true;
+
+	return false;
+}
+
+//Evaluate board for scores
+int evaluateBoard()
+{
+	for (int x = 0; x < ROWS; x++)
+	{
+		if (game.Board[x][0] == game.Board[x][1] &&
+			game.Board[x][1] == game.Board[x][2])
+		{
+			if (game.Board[x][0] == PLAYER_X)
+				return 10;
+			else if (game.Board[x][0] == PLAYER_O)
+				return -10;
+		}
+	}
+
+	for (int y = 0; y < COLS; y++)
+	{
+		if (game.Board[0][y] == game.Board[1][y] &&
+			game.Board[1][y] == game.Board[2][y])
+		{
+			if (game.Board[0][y] == PLAYER_X)
+				return 10;
+			else if (game.Board[0][y] == PLAYER_O)
+				return -10;
+		}
+	}
+
+	if (game.Board[0][0] == game.Board[1][1] &&
+		game.Board[1][1] == game.Board[2][2])
+	{
+		if (game.Board[0][0] == PLAYER_X)
+			return 10;
+		else if (game.Board[0][0] == PLAYER_O)
+			return -10;
+	}
+
+	if (game.Board[0][2] == game.Board[1][1] &&
+		game.Board[1][1] == game.Board[2][0])
+	{
+		if (game.Board[0][2] == PLAYER_X)
+			return 10;
+		else if (game.Board[0][2] == PLAYER_O)
+			return -10;
+	}
+
+	return 0;
+}
+
+//int minimax(int depth, bool isMax)
+//{
+//	int score = evaluateBoard();
+//
+//	if (score == 10)
+//		return 10;
+//
+//	if (score == -10)
+//		return -10;
+//
+//	if (!isMovesLeft())
+//		return 0;
+//
+//	if (isMax)
+//	{
+//		int best = -1000;
+//
+//		for (int x = 0; x < ROWS; x++)
+//		{
+//			for (int y = 0; y < COLS; y++)
+//			{
+//				if (game.Board[x][y] == EMPTY)
+//				{
+//					game.Board[x][y] = PLAYER_X;
+//
+//					int max = minimax(depth + 1, !isMax);
+//					if (max > best)
+//						best = max;
+//
+//					game.Board[x][y] = EMPTY;
+//				}
+//			}
+//		}
+//
+//		return best;
+//	}
+//	else if (!isMax)
+//	{
+//		int best = 1000;
+//
+//		for (int x = 0; x < ROWS; x++)
+//		{
+//			for (int y = 0; y < COLS; y++)
+//			{
+//				if (game.Board[x][y] == EMPTY)
+//				{
+//					game.Board[x][y] = PLAYER_O;
+//
+//					int min = minimax(depth + 1, isMax);
+//					if (min < best)
+//						best = min;
+//
+//					game.Board[x][y] = EMPTY;
+//				}
+//			}
+//		}
+//
+//		return best;
+//	}
+//}
+
+int minimax(int depth, int alpha, int beta, bool isMax)
+{
+	int score = evaluateBoard();
+
+	if (score == 10)
+		return 10 - depth;
+
+	if (score == -10)
+		return -10 + depth;
+
+	if (!isMovesLeft())
+		return 0;
+
+	if (isMax)
+	{
+		int best = -1000;
+
+		for (int x = 0; x < ROWS; x++)
+		{
+			for (int y = 0; y < COLS; y++)
+			{
+				if (game.Board[x][y] == EMPTY)
+				{
+					game.Board[x][y] = PLAYER_X;
+
+					int max = minimax(depth + 1, alpha, beta, !isMax);
+					if (max > best)
+						best = max;
+
+					if (best > alpha)
+						alpha = best;
+
+					game.Board[x][y] = EMPTY;
+
+					if (beta <= alpha)
+						break;
+				}
+			}
+		}
+
+		return best;
+	}
+	else if (!isMax)
+	{
+		int best = 1000;
+
+		for (int x = 0; x < ROWS; x++)
+		{
+			for (int y = 0; y < COLS; y++)
+			{
+				if (game.Board[x][y] == EMPTY)
+				{
+					game.Board[x][y] = PLAYER_O;
+
+					int min = minimax(depth + 1,alpha, beta, isMax);
+					if (min < best)
+						best = min;
+
+					if (best < beta)
+						beta = best;
+
+					game.Board[x][y] = EMPTY;
+
+					if (beta <= alpha)
+						break;
+				}
+			}
+		}
+
+		return best;
+	}
+}
+
+BestMove findBestMove()
+{
+	int bestScore = -1000;
+
+	BestMove bestMove;
+	bestMove.Row = -1;
+	bestMove.Col = -1;
+
+	if (game.Board[1][1] == EMPTY)
+	{
+		bestMove.Row = 1;
+		bestMove.Col = 1;
+		return bestMove;
+	}
+
+	for (int x = 0; x < ROWS; x++)
+	{
+		for (int y = 0; y < COLS; y++)
+		{
+			if (game.Board[x][y] == EMPTY)
+			{
+				game.Board[x][y] = PLAYER_X;
+
+				int score = minimax(0, -10000000000, 10000000000, false);
+
+				game.Board[x][y] = EMPTY;
+
+				if (score > bestScore)
+				{
+					bestScore = score;
+					bestMove.Row = x;
+					bestMove.Col = y;
+				}
+			}
+		}
+	}
+
+	return bestMove;
+}
+
 //Update game
 void update()
 {
+	if (game.CurrentPlayer == PLAYER_O)
+	{
+		BestMove move = findBestMove();
+		if (move.Row != -1 && move.Col != -1)
+		{
+			game.Board[move.Row][move.Col] = PLAYER_O;
+			game.CurrentPlayer = PLAYER_X;
+		}
+	}
 
+	int score = evaluateBoard();
+	if (!isMovesLeft() || score != 0)
+	{
+		game.GameOver = true;
+	}
 }
 
 void drawCircle(SDL_Renderer* renderer, int x, int y, int radius, SDL_Color color)
