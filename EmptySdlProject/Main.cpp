@@ -275,14 +275,12 @@ int minimax(int depth, int alpha, int beta, bool isMax)
 				{
 					game.Board[x][y] = PLAYER_X;
 
-					int max = minimax(depth + 1, alpha, beta, !isMax);
-					if (max > best)
-						best = max;
-
-					if (best > alpha)
-						alpha = best;
+					int val = minimax(depth + 1, alpha, beta, false);
 
 					game.Board[x][y] = EMPTY;
+
+					best = std::max(best, val);
+					alpha = std::max(alpha, best);
 
 					if (beta <= alpha)
 						break;
@@ -292,7 +290,7 @@ int minimax(int depth, int alpha, int beta, bool isMax)
 
 		return best;
 	}
-	else if (!isMax)
+	else
 	{
 		int best = 1000;
 
@@ -304,14 +302,12 @@ int minimax(int depth, int alpha, int beta, bool isMax)
 				{
 					game.Board[x][y] = PLAYER_O;
 
-					int min = minimax(depth + 1,alpha, beta, isMax);
-					if (min < best)
-						best = min;
-
-					if (best < beta)
-						beta = best;
+					int val = minimax(depth + 1, alpha, beta, true);
 
 					game.Board[x][y] = EMPTY;
+
+					best = std::min(best, val);
+					beta = std::min(beta, best);
 
 					if (beta <= alpha)
 						break;
@@ -346,7 +342,7 @@ BestMove findBestMove()
 			{
 				game.Board[x][y] = PLAYER_X;
 
-				int score = minimax(0, -10000000000, 10000000000, false);
+				int score = minimax(0, INT_MIN, INT_MAX, false);
 
 				game.Board[x][y] = EMPTY;
 
