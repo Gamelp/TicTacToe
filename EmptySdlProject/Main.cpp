@@ -95,37 +95,37 @@ void input(void)
 	{
 		switch (event.type)
 		{
-			case SDL_QUIT:
-				running = SDL_FALSE;
-				break;
+		case SDL_QUIT:
+			running = SDL_FALSE;
+			break;
 
-			case SDL_MOUSEBUTTONDOWN:
-				SDL_MouseButtonEvent& b = event.button;
-				if (b.button == SDL_BUTTON_LEFT)
+		case SDL_MOUSEBUTTONDOWN:
+			SDL_MouseButtonEvent& b = event.button;
+			if (b.button == SDL_BUTTON_LEFT)
+			{
+				int x, y;
+				Uint32 buttons = SDL_GetMouseState(&x, &y);
+
+				if (!game.GameOver)
 				{
-					int x, y;
-					Uint32 buttons = SDL_GetMouseState(&x, &y);
+					int CELL_X = (int)(x / CELL_WIDTH);
+					int CELL_Y = (int)(y / CELL_HEIGHT);
 
-					if (!game.GameOver)
+					if (game.Board[CELL_X][CELL_Y] == EMPTY)
 					{
-						int CELL_X = (int)(x / CELL_WIDTH);
-						int CELL_Y = (int)(y / CELL_HEIGHT);
-
-						if (game.Board[CELL_X][CELL_Y] == EMPTY)
+						if (game.CurrentPlayer == PLAYER_X)
 						{
-							if (game.CurrentPlayer == PLAYER_X)
-							{
-								game.Board[CELL_X][CELL_Y] = PLAYER_X;
-								game.CurrentPlayer = PLAYER_O;
-							}
+							game.Board[CELL_X][CELL_Y] = PLAYER_X;
+							game.CurrentPlayer = PLAYER_O;
 						}
 					}
-					else
-					{
-						setup();
-					}
 				}
-				break;
+				else
+				{
+					setup();
+				}
+			}
+			break;
 		}
 	}
 }
@@ -188,67 +188,6 @@ int evaluateBoard()
 
 	return 0;
 }
-
-//int minimax(int depth, bool isMax)
-//{
-//	int score = evaluateBoard();
-//
-//	if (score == 10)
-//		return 10;
-//
-//	if (score == -10)
-//		return -10;
-//
-//	if (!isMovesLeft())
-//		return 0;
-//
-//	if (isMax)
-//	{
-//		int best = -1000;
-//
-//		for (int x = 0; x < ROWS; x++)
-//		{
-//			for (int y = 0; y < COLS; y++)
-//			{
-//				if (game.Board[x][y] == EMPTY)
-//				{
-//					game.Board[x][y] = PLAYER_X;
-//
-//					int max = minimax(depth + 1, !isMax);
-//					if (max > best)
-//						best = max;
-//
-//					game.Board[x][y] = EMPTY;
-//				}
-//			}
-//		}
-//
-//		return best;
-//	}
-//	else if (!isMax)
-//	{
-//		int best = 1000;
-//
-//		for (int x = 0; x < ROWS; x++)
-//		{
-//			for (int y = 0; y < COLS; y++)
-//			{
-//				if (game.Board[x][y] == EMPTY)
-//				{
-//					game.Board[x][y] = PLAYER_O;
-//
-//					int min = minimax(depth + 1, isMax);
-//					if (min < best)
-//						best = min;
-//
-//					game.Board[x][y] = EMPTY;
-//				}
-//			}
-//		}
-//
-//		return best;
-//	}
-//}
 
 int minimax(int depth, int alpha, int beta, bool isMax)
 {
